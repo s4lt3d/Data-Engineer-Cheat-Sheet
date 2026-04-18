@@ -447,6 +447,13 @@
             <li>UDF caution</li>
             <li>PySpark</li>
           </ul>
+          <div class="label">Plan Debugging</div>
+          <ul>
+            <li>Start with <code>EXPLAIN</code> or <code>df.explain("formatted")</code></li>
+            <li>Use Spark UI to inspect stages, tasks, shuffle read/write, spill, and skewed partitions</li>
+            <li>AQE can change join strategy and coalesce partitions at runtime</li>
+            <li>Check exchange nodes, file scans, and broadcast decisions before tuning blindly</li>
+          </ul>
           <div class="label">Structured Streaming</div>
           <ul>
             <li>Sources, sinks, triggers</li>
@@ -485,6 +492,32 @@
             <li><strong>Silver:</strong> clean, dedupe, standardize, conform</li>
             <li><strong>Gold:</strong> business-ready marts and aggregates</li>
           </ul>
+          <div class="label">Production Ingestion</div>
+          <ul>
+            <li>Auto Loader for cloud-file ingest, schema evolution, and managed discovery</li>
+            <li>Streaming tables for continuous ingestion and incremental transforms</li>
+            <li>Materialized views for read-heavy serving and repeated aggregations</li>
+            <li>Lakeflow / DLT-style pipelines for declarative dependencies and quality expectations</li>
+          </ul>
+          <div class="label">Execution Choice</div>
+          <ul>
+            <li>Notebooks explore</li>
+            <li>Jobs operate repeatable workloads</li>
+            <li>Declarative pipelines standardize ingestion and quality guardrails</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>Delta Operations</h2>
+        <div class="content">
+          <ul>
+            <li><strong>MERGE:</strong> upserts, late-arriving changes, dedupe, and SCD Type 1 / 2 flows</li>
+            <li><strong>OPTIMIZE:</strong> compaction and layout tuning when small files slow scans</li>
+            <li><strong>VACUUM:</strong> old-file cleanup after retention and recovery needs are understood</li>
+            <li><strong>History:</strong> snapshot isolation, transaction log, time travel, and table history checks</li>
+            <li><strong>Rule:</strong> keep merge logic deterministic and file maintenance intentional</li>
+          </ul>
         </div>
       </section>
 
@@ -503,6 +536,13 @@
             <li>Spectrum awareness</li>
             <li>Vacuum / analyze awareness</li>
             <li>Security and access control</li>
+          </ul>
+          <div class="label">Modern Features</div>
+          <ul>
+            <li>Materialized views for repeated aggregates and serving layers</li>
+            <li>Data sharing for governed cross-team or cross-account consumption without extra copies</li>
+            <li>Zero-ETL integrations for supported operational sources and lower-latency landings</li>
+            <li>Choose warehouse serving deliberately; do not force near-real-time product APIs onto warehouse patterns</li>
           </ul>
           <div class="label">Tuning</div>
           <ul>
@@ -528,6 +568,14 @@
             <li>Failure notifications</li>
             <li>Run metadata</li>
           </ul>
+          <div class="label">Scheduling Semantics</div>
+          <ul>
+            <li><code>logical_date</code> marks the start of the data interval, not the wall-clock launch time</li>
+            <li>Use <code>data_interval_start</code> and <code>data_interval_end</code> for partition filters and backfills</li>
+            <li>Set time zones explicitly, usually UTC end to end</li>
+            <li><code>catchup=True</code> vs <code>False</code> changes whether missed historical intervals are scheduled automatically</li>
+            <li>Asset-aware and event-driven scheduling fit upstream-driven pipelines better than cron alone</li>
+          </ul>
         </div>
       </section>
 
@@ -548,10 +596,39 @@
             <li>Environments and CI/CD</li>
             <li>Semantic-layer awareness</li>
           </ul>
+          <div class="label">Sources & Freshness</div>
+          <ul>
+            <li>Define sources with owners, loaded-at fields, and freshness thresholds</li>
+            <li>Treat upstream source contracts as first-class, not informal assumptions</li>
+          </ul>
+          <div class="label">Exposures & Consumers</div>
+          <ul>
+            <li>Use exposures to model dashboards, extracts, apps, and ML consumers</li>
+            <li>Expose downstream ownership and dependency impact before changing semantics</li>
+          </ul>
+          <div class="label">Testing & History</div>
+          <ul>
+            <li>Generic data tests protect keys, nulls, relationships, and accepted values</li>
+            <li>Unit tests protect transformation logic and edge-case expectations</li>
+            <li>Snapshots capture SCD Type 2 history when the business needs change tracking</li>
+          </ul>
           <div class="label">Core Tests</div>
           <ul>
             <li><code>unique</code>, <code>not_null</code>, <code>relationships</code>, <code>accepted_values</code></li>
             <li>Custom business tests</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Serving & Data Products</h2>
+        <div class="content">
+          <ul>
+            <li>Downstream consumers include BI dashboards, extracts, apps, reverse ETL, and ML features</li>
+            <li>A data product needs an owner, grain, semantic contract, cadence, SLA, and change process</li>
+            <li>Metric definitions, join rules, and null behavior matter as much as storage technology</li>
+            <li>Use exposures, catalog metadata, and runbooks to connect producers to consumers</li>
+            <li>Explicit producer-consumer contracts reduce surprise breakage more than ad hoc fixes do</li>
           </ul>
         </div>
       </section>
@@ -736,8 +813,14 @@
             <li>Explain why Parquet over CSV</li>
             <li>Explain why the warehouse layer exists</li>
             <li>Explain dbt lineage and tests</li>
+            <li>Explain dbt sources, freshness, exposures, and snapshots</li>
             <li>Explain Airflow retries and backfills</li>
+            <li>Explain <code>logical_date</code>, data interval, and <code>catchup</code></li>
+            <li>Explain Spark <code>EXPLAIN</code>, Spark UI, and AQE at a basic level</li>
+            <li>Explain Delta <code>MERGE</code>, <code>OPTIMIZE</code>, and <code>VACUUM</code></li>
             <li>Explain Redshift distribution and sort keys at a basic level</li>
+            <li>Explain Redshift materialized views, data sharing, and zero-ETL at a basic level</li>
+            <li>Talk through the contract between a producer and downstream consumers</li>
             <li>Talk through one pipeline end to end</li>
           </ul>
         </div>
@@ -751,8 +834,14 @@
             <li>Can write joins, windows, CTEs, and incremental logic</li>
             <li>Can design fact and dimension tables</li>
             <li>Can explain Spark partitions and skew at a basic level</li>
+            <li>Can read Spark plans with <code>EXPLAIN</code> and Spark UI at a basic level</li>
             <li>Can load and query Redshift</li>
+            <li>Can explain Redshift materialized views, data sharing, and zero-ETL tradeoffs</li>
             <li>Can use Databricks notebooks / jobs / catalog at a basic level</li>
+            <li>Can explain Auto Loader, streaming tables, and declarative Lakeflow / DLT-style pipelines</li>
+            <li>Can explain Delta merge and maintenance operations at a basic level</li>
+            <li>Can define dbt sources, freshness, exposures, and snapshot use cases</li>
+            <li>Can explain Airflow logical dates, data intervals, and catchup behavior</li>
             <li>Can explain orchestration, retries, idempotency, and SLAs</li>
             <li>Can talk about schema evolution, data quality, and lineage</li>
           </ul>

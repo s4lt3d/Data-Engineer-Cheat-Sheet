@@ -186,7 +186,7 @@
 <body>
   <div class="page">
     <div class="banner">Data Engineer Snippets</div>
-    <div class="subtitle">Copyable patterns for SQL, dbt, orchestration, Spark, and validation</div>
+    <div class="subtitle">Copyable patterns for SQL, dbt, Airflow, Spark, Delta, and validation</div>
     <nav class="nav">
       <a href="data_engineer_cheatsheet.html">Overview</a>
       <a href="data_engineer_playbooks.html">Playbooks</a>
@@ -251,7 +251,7 @@ where updated_at &gt;= :last_watermark
       </section>
 
       <section class="box green">
-        <h2>Merge / Upsert Skeleton</h2>
+        <h2>SQL Merge / Upsert Skeleton</h2>
         <div class="content">
           <pre><code>merge into target t
 using staging s
@@ -343,16 +343,83 @@ select * from cleaned;</code></pre>
         </div>
       </section>
 
+      <section class="box purple">
+        <h2>dbt Source Freshness</h2>
+        <div class="content">
+          <pre><code>sources:
+  - name: app
+    schema: raw
+    tables:
+      - name: events
+        loaded_at_field: ingested_at
+        freshness:
+          warn_after: {count: 2, period: hour}
+          error_after: {count: 6, period: hour}</code></pre>
+          <ul>
+            <li>Freshness turns upstream lateness into an explicit contract.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>dbt Exposure YAML</h2>
+        <div class="content">
+          <pre><code>exposures:
+  - name: revenue_dashboard
+    type: dashboard
+    owner:
+      name: analytics
+      email: data@example.com
+    depends_on:
+      - ref('fct_revenue_daily')</code></pre>
+          <ul>
+            <li>Use exposures to connect transformations to dashboards, apps, and extracts.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>dbt Snapshot Skeleton</h2>
+        <div class="content">
+          <pre><code>{% snapshot dim_customer_history %}
+{{
+  config(
+    target_schema='snapshots',
+    unique_key='customer_id',
+    strategy='timestamp',
+    updated_at='updated_at'
+  )
+}}
+
+select * from {{ source('crm', 'customers') }}
+
+{% endsnapshot %}</code></pre>
+          <ul>
+            <li>Use when source rows update in place and history matters.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>dbt Test Rule of Thumb</h2>
+        <div class="content">
+          <ul>
+            <li>Generic data tests protect shape: keys, nulls, accepted values, and relationships.</li>
+            <li>Unit tests protect transformation logic and edge-case expectations.</li>
+          </ul>
+        </div>
+      </section>
+
       <section class="box orange">
         <h2>Airflow DAG Skeleton</h2>
         <div class="content">
           <pre><code>from airflow import DAG
 from airflow.operators.python import PythonOperator
-from datetime import datetime
+from pendulum import datetime
 
 with DAG(
     dag_id="daily_pipeline",
-    start_date=datetime(2026, 1, 1),
+    start_date=datetime(2026, 1, 1, tz="UTC"),
     schedule="@daily",
     catchup=False,
 ) as dag:
@@ -376,6 +443,41 @@ with DAG(
       </section>
 
       <section class="box orange">
+        <h2>Airflow Data Interval</h2>
+        <div class="content">
+          <pre><code>@task
+def extract(**context):
+    start = context["data_interval_start"]
+    end = context["data_interval_end"]
+    run_date = context["logical_date"]</code></pre>
+          <ul>
+            <li>Filter data by interval boundaries, not by when the DAG happened to run.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>Asset-Aware Schedule</h2>
+        <div class="content">
+          <pre><code>from airflow import DAG
+from airflow.datasets import Dataset
+
+silver_orders = Dataset("s3://warehouse/silver/orders")
+
+with DAG(
+    dag_id="publish_gold_orders",
+    schedule=[silver_orders],
+    start_date=datetime(2026, 1, 1, tz="UTC"),
+    catchup=False,
+) as dag:
+    ...</code></pre>
+          <ul>
+            <li>Use dataset events when upstream readiness matters more than cron time.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
         <h2>PySpark Batch Skeleton</h2>
         <div class="content">
           <pre><code>df = spark.read.parquet(input_path)
@@ -390,6 +492,35 @@ result = (
 result.write.mode("overwrite").parquet(output_path)</code></pre>
           <ul>
             <li>Prefer built-ins over UDFs first.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>Spark Explain</h2>
+        <div class="content">
+          <pre><code>df.explain("formatted")
+
+spark.sql("""
+EXPLAIN FORMATTED
+SELECT customer_id, sum(amount)
+FROM silver.orders
+GROUP BY 1
+""").show(truncate=False)</code></pre>
+          <ul>
+            <li>Inspect exchanges, joins, filters, and file scans before tuning.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>AQE Basics</h2>
+        <div class="content">
+          <pre><code>spark.conf.set("spark.sql.adaptive.enabled", "true")
+spark.conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+spark.conf.set("spark.sql.adaptive.skewJoin.enabled", "true")</code></pre>
+          <ul>
+            <li>AQE can change join strategy and partition count after the job starts.</li>
           </ul>
         </div>
       </section>
@@ -412,6 +543,68 @@ query = (
 )</code></pre>
           <ul>
             <li>Checkpoint location is part of the contract.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>Auto Loader</h2>
+        <div class="content">
+          <pre><code>bronze_df = (
+    spark.readStream
+         .format("cloudFiles")
+         .option("cloudFiles.format", "json")
+         .option("cloudFiles.schemaLocation", schema_path)
+         .load(raw_path)
+)
+
+(bronze_df.writeStream
+    .option("checkpointLocation", checkpoint_path)
+    .trigger(availableNow=True)
+    .toTable("bronze.events"))</code></pre>
+          <ul>
+            <li>Good default for cloud-file ingest with schema tracking.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>Delta Merge</h2>
+        <div class="content">
+          <pre><code>merge into silver.orders as t
+using staged_orders as s
+on t.order_id = s.order_id
+when matched and s.updated_at &gt;= t.updated_at then update set *
+when not matched then insert *</code></pre>
+          <ul>
+            <li>Deduplicate the staged source before merging.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>Delta Maintenance</h2>
+        <div class="content">
+          <pre><code>OPTIMIZE silver.orders ZORDER BY (customer_id);
+VACUUM silver.orders RETAIN 168 HOURS;
+DESCRIBE HISTORY silver.orders;</code></pre>
+          <ul>
+            <li><code>OPTIMIZE</code> compacts small files; <code>VACUUM</code> removes old files after retention.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>Redshift Materialized View</h2>
+        <div class="content">
+          <pre><code>create materialized view mv_daily_orders as
+select order_date, sum(amount) as revenue
+from fct_orders
+group by 1;
+
+refresh materialized view mv_daily_orders;</code></pre>
+          <ul>
+            <li>Use for repeated aggregates and serving patterns with clear refresh cadence.</li>
           </ul>
         </div>
       </section>

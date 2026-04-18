@@ -372,18 +372,73 @@
       </section>
 
       <section class="box purple">
+        <h2>Airflow Scheduling Semantics</h2>
+        <div class="content">
+          <div class="label">Anchor Rules</div>
+          <ul>
+            <li><code>logical_date</code> is the start of the run's data interval, not the wall-clock launch time.</li>
+            <li>Use <code>data_interval_start</code> and <code>data_interval_end</code> for partition filters and backfill boundaries.</li>
+            <li>Set timezone explicitly, usually UTC, before any date logic spreads through the DAG.</li>
+            <li>Choose <code>catchup=True</code> only when historical intervals should be scheduled automatically.</li>
+          </ul>
+          <div class="label">Use Event Scheduling When</div>
+          <ul>
+            <li>Upstream availability matters more than a cron cadence.</li>
+            <li>Assets or dataset events are a cleaner contract than clock time alone.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box purple">
         <h2>Ship a New dbt Model</h2>
         <div class="content">
           <ol>
             <li>Define business grain.</li>
             <li>Write model SQL from trusted sources only.</li>
             <li>Add tests: <code>unique</code>, <code>not_null</code>, relationships, accepted values.</li>
+            <li>Use generic tests for table shape and unit tests for transformation logic when edge cases matter.</li>
             <li>Add documentation and ownership.</li>
             <li>Check lineage impact.</li>
             <li>Run locally or in CI.</li>
             <li>Validate row counts and sample records.</li>
             <li>Promote through environment flow.</li>
           </ol>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>dbt Sources & Exposures</h2>
+        <div class="content">
+          <div class="label">Define</div>
+          <ul>
+            <li>Source owner, schema, loader, and freshness thresholds.</li>
+            <li>Exposures for dashboards, extracts, apps, and ML consumers.</li>
+            <li>Consumer-facing descriptions for the models that matter operationally.</li>
+          </ul>
+          <div class="label">Rule</div>
+          <ul>
+            <li>Source freshness warnings are upstream contract signals, not optional noise.</li>
+            <li>Every important downstream consumer should be represented somewhere explicit.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>Snapshot / SCD Type 2 History</h2>
+        <div class="content">
+          <div class="label">Use When</div>
+          <ul>
+            <li>Source rows update in place and the business needs historical state.</li>
+          </ul>
+          <div class="label">Choose</div>
+          <ul>
+            <li>Unique key, change detection strategy, and hard-delete handling.</li>
+            <li>How current rows and effective date ranges will be validated.</li>
+          </ul>
+          <div class="label">Rule</div>
+          <ul>
+            <li>Do not snapshot noisy churn unless someone actually consumes the history.</li>
+          </ul>
         </div>
       </section>
 
@@ -409,6 +464,95 @@
             <li>Broadcast smaller side</li>
             <li>Repartition intentionally</li>
             <li>Pre-aggregate before join</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Spark Query Plan Debugging</h2>
+        <div class="content">
+          <div class="label">Start With</div>
+          <ul>
+            <li><code>EXPLAIN</code> or <code>df.explain("formatted")</code> before changing code blindly.</li>
+            <li>Check join strategy, exchange nodes, filter pushdown, and file scans.</li>
+          </ul>
+          <div class="label">Spark UI</div>
+          <ul>
+            <li>Read stages, tasks, shuffle read/write, spill, skewed tasks, and input sizes.</li>
+            <li>Compare slow stages with the parts of the plan that produced them.</li>
+          </ul>
+          <div class="label">AQE</div>
+          <ul>
+            <li>Look for runtime join rewrites and partition coalescing before assuming the static plan tells the whole story.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Databricks Ingestion Choices</h2>
+        <div class="content">
+          <div class="label">Choose</div>
+          <ul>
+            <li>Auto Loader for cloud-file arrival, schema drift, and managed discovery.</li>
+            <li>Streaming tables for continuous ingest and incremental transforms.</li>
+            <li>Materialized views for repeated serving queries and aggregates.</li>
+            <li>Lakeflow / DLT-style pipelines when declarative quality rules and managed dependencies help the team.</li>
+          </ul>
+          <div class="label">Rule</div>
+          <ul>
+            <li>Notebooks explore, jobs operate, declarative pipelines standardize production expectations.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Delta Table Maintenance</h2>
+        <div class="content">
+          <div class="label">Before</div>
+          <ul>
+            <li>Inspect table history, file counts, query patterns, and active streaming readers.</li>
+          </ul>
+          <div class="label">Operations</div>
+          <ul>
+            <li><code>MERGE</code> with deterministic keys and deduped source rows.</li>
+            <li><code>OPTIMIZE</code> when small files or repeated predicates are hurting scans.</li>
+            <li><code>VACUUM</code> only after retention, recovery, and time-travel expectations are clear.</li>
+          </ul>
+          <div class="label">After</div>
+          <ul>
+            <li>Compare file counts, runtimes, and downstream query behavior.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>Redshift Modern Features</h2>
+        <div class="content">
+          <div class="label">Use</div>
+          <ul>
+            <li>Materialized views for repeated aggregates and read-heavy serving layers.</li>
+            <li>Data sharing when multiple consumers need the same curated data without copy sprawl.</li>
+            <li>Zero-ETL when supported source integrations and lower-latency ingestion are worth the tradeoff.</li>
+          </ul>
+          <div class="label">Rule</div>
+          <ul>
+            <li>Redshift is strong for warehouse serving, but operational APIs and OLTP systems still need their own home.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box blue">
+        <h2>Downstream Data Product Contract</h2>
+        <div class="content">
+          <div class="label">Define</div>
+          <ul>
+            <li>Owner, grain, semantic meaning, freshness SLA, and downstream consumers.</li>
+            <li>Dashboards, extracts, apps, and ML features that depend on the dataset.</li>
+          </ul>
+          <div class="label">Protect</div>
+          <ul>
+            <li>Metric definitions, join keys, and null behavior before changing schemas.</li>
+            <li>Expose dependencies through dbt exposures, catalogs, or runbooks.</li>
           </ul>
         </div>
       </section>
