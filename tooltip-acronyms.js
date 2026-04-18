@@ -119,6 +119,11 @@
     "gi"
   );
 
+  let activeTrigger = null;
+  let stickyTrigger = null;
+  let overlay = null;
+  let overlayBubble = null;
+
   function shouldSkip(node) {
     const parent = node.parentElement;
     if (!parent) {
@@ -133,98 +138,120 @@
     element.setAttribute("aria-expanded", isOpen ? "true" : "false");
   }
 
-  function closeOpenTooltips(except) {
-    document.querySelectorAll(".tooltip-term.is-open").forEach((tooltip) => {
-      if (tooltip !== except) {
-        setOpenState(tooltip, false);
-      }
-    });
-  }
-
   function buildTooltip(term) {
     const normalized = term.toLowerCase();
     const expansion = glossaryByKey.get(normalized);
     const tooltip = document.createElement("span");
-    const arrow = document.createElement("span");
-    const bubble = document.createElement("span");
 
     tooltip.className = "tooltip-term";
     tooltip.tabIndex = 0;
     tooltip.textContent = term;
-    tooltip.dataset.placement = "top";
+    tooltip.dataset.tooltip = expansion;
     tooltip.setAttribute("aria-label", `${term}: ${expansion}`);
     tooltip.setAttribute("aria-expanded", "false");
-
-    arrow.className = "tooltip-arrow";
-    arrow.setAttribute("aria-hidden", "true");
-
-    bubble.className = "tooltip-bubble";
-    bubble.setAttribute("role", "tooltip");
-    bubble.textContent = expansion;
-
-    tooltip.append(arrow, bubble);
 
     return tooltip;
   }
 
-  function updateTooltipPosition(tooltip) {
-    if (!tooltip) {
+  function ensureOverlay() {
+    if (overlay) {
+      return overlay;
+    }
+
+    overlay = document.createElement("div");
+    overlay.className = "tooltip-overlay";
+    overlay.dataset.placement = "top";
+    overlay.setAttribute("aria-hidden", "true");
+
+    overlayBubble = document.createElement("div");
+    overlayBubble.className = "tooltip-overlay__bubble";
+    overlayBubble.setAttribute("role", "tooltip");
+
+    const overlayArrow = document.createElement("div");
+    overlayArrow.className = "tooltip-overlay__arrow";
+    overlayArrow.setAttribute("aria-hidden", "true");
+
+    overlay.append(overlayBubble, overlayArrow);
+    document.body.appendChild(overlay);
+
+    return overlay;
+  }
+
+  function closeOverlay() {
+    if (activeTrigger) {
+      setOpenState(activeTrigger, false);
+    }
+
+    activeTrigger = null;
+    stickyTrigger = null;
+
+    if (!overlay) {
       return;
     }
 
-    const bubble = tooltip.querySelector(".tooltip-bubble");
-    if (!bubble) {
+    overlay.classList.remove("is-open");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+
+  function positionOverlay(trigger) {
+    ensureOverlay();
+
+    const text = trigger.dataset.tooltip;
+    if (!text) {
       return;
     }
+
+    overlayBubble.textContent = text;
+    overlay.classList.add("is-open");
+    overlay.setAttribute("aria-hidden", "false");
 
     const viewportMargin = 12;
-    const rect = tooltip.getBoundingClientRect();
+    const gap = 10;
+    const rect = trigger.getBoundingClientRect();
+    const bubbleRect = overlayBubble.getBoundingClientRect();
+    const bubbleWidth = bubbleRect.width;
+    const bubbleHeight = bubbleRect.height;
 
-    tooltip.dataset.placement = "top";
-    tooltip.style.removeProperty("--tooltip-shift-x");
-    tooltip.style.removeProperty("--tooltip-arrow-shift-x");
-
-    const topBubbleRect = bubble.getBoundingClientRect();
-    const topSpace = rect.top - viewportMargin;
-    const bottomSpace = window.innerHeight - rect.bottom - viewportMargin;
-    const preferredHeight = topBubbleRect.height + 18;
     let placement = "top";
+    let top = rect.top - bubbleHeight - gap;
+    const bottomTop = rect.bottom + gap;
 
-    if (topSpace < preferredHeight && bottomSpace > topSpace) {
+    if (top < viewportMargin && bottomTop + bubbleHeight <= window.innerHeight - viewportMargin) {
       placement = "bottom";
+      top = bottomTop;
+    } else if (top < viewportMargin) {
+      placement = "bottom";
+      top = Math.max(viewportMargin, Math.min(bottomTop, window.innerHeight - bubbleHeight - viewportMargin));
     }
 
-    if (bottomSpace < preferredHeight && topSpace >= bottomSpace) {
-      placement = "top";
+    if (placement === "top") {
+      top = Math.max(viewportMargin, top);
     }
 
-    tooltip.dataset.placement = placement;
+    let left = rect.left + rect.width / 2 - bubbleWidth / 2;
+    left = Math.max(viewportMargin, Math.min(left, window.innerWidth - bubbleWidth - viewportMargin));
 
-    const bubbleRect = bubble.getBoundingClientRect();
-    let shiftX = 0;
-
-    if (bubbleRect.left < viewportMargin) {
-      shiftX = viewportMargin - bubbleRect.left;
-    } else if (bubbleRect.right > window.innerWidth - viewportMargin) {
-      shiftX = window.innerWidth - viewportMargin - bubbleRect.right;
-    }
-
-    tooltip.style.setProperty("--tooltip-shift-x", `${shiftX}px`);
-
-    const adjustedLeft = bubbleRect.left + shiftX;
-    const adjustedRight = bubbleRect.right + shiftX;
-    const bubbleCenter = (adjustedLeft + adjustedRight) / 2;
     const triggerCenter = rect.left + rect.width / 2;
-    const arrowPadding = 16;
-    const clampedArrowTarget = Math.min(
-      Math.max(triggerCenter, adjustedLeft + arrowPadding),
-      adjustedRight - arrowPadding
+    const arrowLeft = Math.min(
+      Math.max(triggerCenter - left, 16),
+      Math.max(16, bubbleWidth - 16)
     );
 
-    tooltip.style.setProperty(
-      "--tooltip-arrow-shift-x",
-      `${clampedArrowTarget - bubbleCenter}px`
-    );
+    overlay.dataset.placement = placement;
+    overlay.style.setProperty("--tooltip-left", `${left}px`);
+    overlay.style.setProperty("--tooltip-top", `${top}px`);
+    overlay.style.setProperty("--tooltip-arrow-left", `${arrowLeft}px`);
+  }
+
+  function openOverlay(trigger, sticky) {
+    if (activeTrigger && activeTrigger !== trigger) {
+      setOpenState(activeTrigger, false);
+    }
+
+    activeTrigger = trigger;
+    stickyTrigger = sticky ? trigger : null;
+    setOpenState(trigger, true);
+    positionOverlay(trigger);
   }
 
   function decorateTextNode(node) {
@@ -290,37 +317,71 @@
   function attachTooltipHandlers() {
     document.addEventListener("mouseover", (event) => {
       const tooltip = event.target.closest(".tooltip-term");
-      if (tooltip) {
-        updateTooltipPosition(tooltip);
+      if (!tooltip || stickyTrigger) {
+        return;
+      }
+
+      openOverlay(tooltip, false);
+    });
+
+    document.addEventListener("mouseout", (event) => {
+      if (stickyTrigger) {
+        return;
+      }
+
+      const tooltip = event.target.closest(".tooltip-term");
+      const nextTooltip = event.relatedTarget && event.relatedTarget.closest
+        ? event.relatedTarget.closest(".tooltip-term")
+        : null;
+
+      if (tooltip && tooltip === activeTrigger && !nextTooltip) {
+        closeOverlay();
       }
     });
 
     document.addEventListener("focusin", (event) => {
       const tooltip = event.target.closest(".tooltip-term");
       if (tooltip) {
-        updateTooltipPosition(tooltip);
+        openOverlay(tooltip, false);
+      }
+    });
+
+    document.addEventListener("focusout", (event) => {
+      if (stickyTrigger) {
+        return;
+      }
+
+      const tooltip = event.target.closest(".tooltip-term");
+      const nextTooltip = event.relatedTarget && event.relatedTarget.closest
+        ? event.relatedTarget.closest(".tooltip-term")
+        : null;
+
+      if (tooltip && tooltip === activeTrigger && !nextTooltip) {
+        closeOverlay();
       }
     });
 
     document.addEventListener("click", (event) => {
       const tooltip = event.target.closest(".tooltip-term");
       if (!tooltip) {
-        closeOpenTooltips();
+        closeOverlay();
         return;
       }
 
       event.preventDefault();
       event.stopPropagation();
 
-      const willOpen = !tooltip.classList.contains("is-open");
-      closeOpenTooltips(tooltip);
-      updateTooltipPosition(tooltip);
-      setOpenState(tooltip, willOpen);
+      if (stickyTrigger === tooltip) {
+        closeOverlay();
+        return;
+      }
+
+      openOverlay(tooltip, true);
     });
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
-        closeOpenTooltips();
+        closeOverlay();
         return;
       }
 
@@ -331,21 +392,28 @@
 
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        const willOpen = !tooltip.classList.contains("is-open");
-        closeOpenTooltips(tooltip);
-        updateTooltipPosition(tooltip);
-        setOpenState(tooltip, willOpen);
+
+        if (stickyTrigger === tooltip) {
+          closeOverlay();
+          return;
+        }
+
+        openOverlay(tooltip, true);
       }
     });
 
     window.addEventListener("resize", () => {
-      document.querySelectorAll(".tooltip-term.is-open").forEach(updateTooltipPosition);
+      if (activeTrigger) {
+        positionOverlay(activeTrigger);
+      }
     });
 
     window.addEventListener(
       "scroll",
       () => {
-        document.querySelectorAll(".tooltip-term.is-open").forEach(updateTooltipPosition);
+        if (activeTrigger) {
+          positionOverlay(activeTrigger);
+        }
       },
       { passive: true }
     );
@@ -353,6 +421,7 @@
 
   function initializeTooltips() {
     decoratePage();
+    ensureOverlay();
     attachTooltipHandlers();
   }
 
