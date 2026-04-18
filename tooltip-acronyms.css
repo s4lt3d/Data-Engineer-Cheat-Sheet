@@ -1,0 +1,19 @@
+.tooltip-term,
+abbr[title] {
+  border-bottom: none;
+  cursor: help;
+  font-style: normal;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
+}
+
+.tooltip-term:hover,
+.tooltip-term:focus-visible,
+abbr[title]:hover,
+abbr[title]:focus-visible {
+  background: rgba(23, 63, 53, 0.12);
+  border-radius: 2px;
+  outline: none;
+}
