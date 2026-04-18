@@ -145,15 +145,86 @@
     const normalized = term.toLowerCase();
     const expansion = glossaryByKey.get(normalized);
     const tooltip = document.createElement("span");
+    const arrow = document.createElement("span");
+    const bubble = document.createElement("span");
 
     tooltip.className = "tooltip-term";
     tooltip.tabIndex = 0;
     tooltip.textContent = term;
-    tooltip.setAttribute("data-tooltip", expansion);
+    tooltip.dataset.placement = "top";
     tooltip.setAttribute("aria-label", `${term}: ${expansion}`);
     tooltip.setAttribute("aria-expanded", "false");
 
+    arrow.className = "tooltip-arrow";
+    arrow.setAttribute("aria-hidden", "true");
+
+    bubble.className = "tooltip-bubble";
+    bubble.setAttribute("role", "tooltip");
+    bubble.textContent = expansion;
+
+    tooltip.append(arrow, bubble);
+
     return tooltip;
+  }
+
+  function updateTooltipPosition(tooltip) {
+    if (!tooltip) {
+      return;
+    }
+
+    const bubble = tooltip.querySelector(".tooltip-bubble");
+    if (!bubble) {
+      return;
+    }
+
+    const viewportMargin = 12;
+    const rect = tooltip.getBoundingClientRect();
+
+    tooltip.dataset.placement = "top";
+    tooltip.style.removeProperty("--tooltip-shift-x");
+    tooltip.style.removeProperty("--tooltip-arrow-shift-x");
+
+    const topBubbleRect = bubble.getBoundingClientRect();
+    const topSpace = rect.top - viewportMargin;
+    const bottomSpace = window.innerHeight - rect.bottom - viewportMargin;
+    const preferredHeight = topBubbleRect.height + 18;
+    let placement = "top";
+
+    if (topSpace < preferredHeight && bottomSpace > topSpace) {
+      placement = "bottom";
+    }
+
+    if (bottomSpace < preferredHeight && topSpace >= bottomSpace) {
+      placement = "top";
+    }
+
+    tooltip.dataset.placement = placement;
+
+    const bubbleRect = bubble.getBoundingClientRect();
+    let shiftX = 0;
+
+    if (bubbleRect.left < viewportMargin) {
+      shiftX = viewportMargin - bubbleRect.left;
+    } else if (bubbleRect.right > window.innerWidth - viewportMargin) {
+      shiftX = window.innerWidth - viewportMargin - bubbleRect.right;
+    }
+
+    tooltip.style.setProperty("--tooltip-shift-x", `${shiftX}px`);
+
+    const adjustedLeft = bubbleRect.left + shiftX;
+    const adjustedRight = bubbleRect.right + shiftX;
+    const bubbleCenter = (adjustedLeft + adjustedRight) / 2;
+    const triggerCenter = rect.left + rect.width / 2;
+    const arrowPadding = 16;
+    const clampedArrowTarget = Math.min(
+      Math.max(triggerCenter, adjustedLeft + arrowPadding),
+      adjustedRight - arrowPadding
+    );
+
+    tooltip.style.setProperty(
+      "--tooltip-arrow-shift-x",
+      `${clampedArrowTarget - bubbleCenter}px`
+    );
   }
 
   function decorateTextNode(node) {
@@ -217,6 +288,20 @@
   }
 
   function attachTooltipHandlers() {
+    document.addEventListener("mouseover", (event) => {
+      const tooltip = event.target.closest(".tooltip-term");
+      if (tooltip) {
+        updateTooltipPosition(tooltip);
+      }
+    });
+
+    document.addEventListener("focusin", (event) => {
+      const tooltip = event.target.closest(".tooltip-term");
+      if (tooltip) {
+        updateTooltipPosition(tooltip);
+      }
+    });
+
     document.addEventListener("click", (event) => {
       const tooltip = event.target.closest(".tooltip-term");
       if (!tooltip) {
@@ -229,6 +314,7 @@
 
       const willOpen = !tooltip.classList.contains("is-open");
       closeOpenTooltips(tooltip);
+      updateTooltipPosition(tooltip);
       setOpenState(tooltip, willOpen);
     });
 
@@ -247,9 +333,22 @@
         event.preventDefault();
         const willOpen = !tooltip.classList.contains("is-open");
         closeOpenTooltips(tooltip);
+        updateTooltipPosition(tooltip);
         setOpenState(tooltip, willOpen);
       }
     });
+
+    window.addEventListener("resize", () => {
+      document.querySelectorAll(".tooltip-term.is-open").forEach(updateTooltipPosition);
+    });
+
+    window.addEventListener(
+      "scroll",
+      () => {
+        document.querySelectorAll(".tooltip-term.is-open").forEach(updateTooltipPosition);
+      },
+      { passive: true }
+    );
   }
 
   function initializeTooltips() {
