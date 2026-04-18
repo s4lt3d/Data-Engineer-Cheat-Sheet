@@ -1,0 +1,765 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Engineer Cheat Sheet</title>
+  <style>
+    :root {
+      --paper: #fdfcf7;
+      --ink: #1f2933;
+      --muted: #52606d;
+      --border: #b8c1cc;
+      --title-bg: #173f35;
+      --title-fg: #f6fff9;
+      --green: #dff1df;
+      --green-border: #5a8f62;
+      --blue: #dcebf9;
+      --blue-border: #4f79a7;
+      --orange: #fde7c7;
+      --orange-border: #bf7b1d;
+      --red: #f6dfdf;
+      --red-border: #a65454;
+      --yellow: #f7f3cf;
+      --yellow-border: #a7963b;
+      --purple: #e9e0f6;
+      --purple-border: #775da8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #e7eaee;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.2;
+    }
+
+    .page {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .banner {
+      background: var(--title-bg);
+      color: var(--title-fg);
+      border: 4px solid #2e6455;
+      padding: 10px 14px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--muted);
+      font-size: 13px;
+      margin: -2px 0 12px;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 0 0 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: #173f35;
+      background: #eef4ef;
+      border: 2px solid #7d9c8f;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .nav a.active {
+      background: #173f35;
+      color: #f6fff9;
+      border-color: #173f35;
+    }
+
+    .sheet {
+      column-count: 4;
+      column-gap: 12px;
+    }
+
+    .box {
+      break-inside: avoid;
+      margin: 0 0 12px;
+      border: 4px solid var(--border);
+      background: white;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .box.blue { border-color: var(--blue-border); background: var(--blue); }
+    .box.green { border-color: var(--green-border); background: var(--green); }
+    .box.orange { border-color: var(--orange-border); background: var(--orange); }
+    .box.red { border-color: var(--red-border); background: var(--red); }
+    .box.yellow { border-color: var(--yellow-border); background: var(--yellow); }
+    .box.purple { border-color: var(--purple-border); background: var(--purple); }
+
+    .box h2 {
+      margin: 0;
+      padding: 8px 10px 6px;
+      border-bottom: 3px solid rgba(0, 0, 0, 0.15);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 27px;
+      line-height: 1.05;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      text-align: center;
+    }
+
+    .box h3 {
+      margin: 0;
+      padding: 8px 10px 4px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 17px;
+      line-height: 1.1;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .box .content {
+      padding: 8px 12px 12px;
+      font-size: 13px;
+    }
+
+    .content p {
+      margin: 0 0 6px;
+    }
+
+    .content ul {
+      margin: 0 0 6px 16px;
+      padding: 0;
+    }
+
+    .content li {
+      margin: 0 0 3px;
+    }
+
+    .label {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-size: 11px;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .tiny {
+      font-size: 12px;
+    }
+
+    .question-list {
+      margin: 6px 0 0;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid rgba(0, 0, 0, 0.12);
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.92em;
+    }
+
+    .footer {
+      margin-top: 6px;
+      text-align: center;
+      color: var(--muted);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1400px) {
+      .sheet { column-count: 3; }
+    }
+
+    @media (max-width: 1000px) {
+      .sheet { column-count: 2; }
+    }
+
+    @media (max-width: 700px) {
+      .sheet { column-count: 1; }
+      .box h2 { font-size: 22px; }
+    }
+
+    @media print {
+      @page {
+        size: 11in 17in portrait;
+        margin: 0.32in;
+      }
+
+      body {
+        background: white;
+      }
+
+      .page {
+        max-width: none;
+        padding: 0;
+      }
+
+      .sheet {
+        column-count: 4;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="banner">Data Engineer Cheat Sheet</div>
+    <div class="subtitle">Foundations, platform concepts, interview patterns, and project roadmap</div>
+    <nav class="nav">
+      <a class="active" href="data_engineer_cheatsheet.html">Overview</a>
+      <a href="data_engineer_playbooks.html">Playbooks</a>
+      <a href="data_engineer_snippets.html">Snippets</a>
+    </nav>
+
+    <div class="sheet">
+      <section class="box red">
+        <h2>Mindset</h2>
+        <div class="content">
+          <ul>
+            <li>Think in data systems, not just code.</li>
+            <li>Trace every flow as <code>input → processing → storage → serving → monitoring</code>.</li>
+            <li>Optimize for reliability, lineage, cost, and trust.</li>
+            <li>Learn one cloud deeply and map the patterns elsewhere.</li>
+          </ul>
+          <div class="question-list tiny">
+            <div class="label">Always Ask</div>
+            <ul>
+              <li>What is the source?</li>
+              <li>What is the grain?</li>
+              <li>What is the schema?</li>
+              <li>What is the SLA?</li>
+              <li>Who consumes it?</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="box blue">
+        <h2>Core Tools</h2>
+        <div class="content">
+          <ul>
+            <li><strong>SQL:</strong> joins, windows, CTEs, incremental logic</li>
+            <li><strong>Python:</strong> packaging, file I/O, APIs, local transforms</li>
+            <li><strong>Linux + CLI:</strong> bash, env vars, cron, SSH, permissions</li>
+            <li><strong>Git:</strong> branching, PRs, rebase/merge, CI basics</li>
+            <li><strong>Cloud:</strong> compute, object storage, IAM, secrets, logs, cost</li>
+            <li><strong>Data modeling:</strong> grain, facts, dimensions, marts</li>
+            <li><strong>Distributed systems:</strong> partitions, shuffles, retries, idempotency</li>
+            <li><strong>Observability:</strong> logs, metrics, freshness, row counts, runbooks</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box blue">
+        <h2>SQL</h2>
+        <h3>Fundamentals</h3>
+        <div class="content">
+          <ul>
+            <li><code>SELECT</code>, <code>WHERE</code>, <code>GROUP BY</code>, <code>HAVING</code>, <code>ORDER BY</code></li>
+            <li><code>INNER</code>, <code>LEFT</code>, and <code>FULL</code> joins</li>
+            <li><code>UNION</code> vs <code>UNION ALL</code></li>
+            <li><code>CASE WHEN</code>, subqueries, CTEs, date logic, NULL handling</li>
+            <li>DDL vs DML, views, materialized views, temp tables</li>
+          </ul>
+          <div class="label">Window Functions</div>
+          <ul>
+            <li><code>ROW_NUMBER</code>, <code>RANK</code>, <code>DENSE_RANK</code></li>
+            <li><code>LAG</code>, <code>LEAD</code>, running totals</li>
+            <li>Understand partitioning vs ordering inside windows</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box blue">
+        <h2>SQL Interview Patterns</h2>
+        <div class="content">
+          <ul>
+            <li>Deduplicate data</li>
+            <li>Top N per group</li>
+            <li>Sessionization awareness</li>
+            <li>Funnel and cohort logic awareness</li>
+            <li>Slowly changing joins</li>
+            <li>Incremental upserts / merge logic</li>
+            <li>Data reconciliation queries</li>
+            <li>Root-cause debugging queries</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Python</h2>
+        <div class="content">
+          <ul>
+            <li>Functions, classes, packages</li>
+            <li>Virtual environments</li>
+            <li>File I/O</li>
+            <li>JSON, CSV, Parquet basics</li>
+            <li>Requests / APIs</li>
+            <li>Pandas for local prototyping</li>
+            <li>PySpark basics later</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Data Shapes & Formats</h2>
+        <div class="content">
+          <ul>
+            <li><strong>Structured:</strong> stable table schemas</li>
+            <li><strong>Semi-structured:</strong> JSON, nested records, arrays</li>
+            <li><strong>Unstructured references:</strong> documents, media, logs around metadata</li>
+          </ul>
+          <div class="label">File Formats</div>
+          <ul>
+            <li><strong>CSV:</strong> simple, universal, weak typing</li>
+            <li><strong>JSON:</strong> flexible, nested, common for APIs</li>
+            <li><strong>Parquet:</strong> columnar, compressed, analytics-friendly</li>
+            <li><strong>Avro:</strong> schema-aware transport / event awareness</li>
+            <li><strong>Iceberg / Delta:</strong> schema evolution, partition evolution, snapshots, ACID semantics</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Storage Patterns</h2>
+        <div class="content">
+          <ul>
+            <li>Raw landing zone</li>
+            <li>Cleaned canonical layer</li>
+            <li>Curated serving layer</li>
+            <li>Archival / cold storage</li>
+            <li>Metadata catalog</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>Data Modeling</h2>
+        <h3>Core Concepts</h3>
+        <div class="content">
+          <ul>
+            <li>Understand business grain first</li>
+            <li>Operational schema vs analytical schema</li>
+            <li>Fact tables, dimension tables, star schemas</li>
+            <li>Slowly changing dimensions, surrogate keys, conformed dimensions</li>
+            <li>Snapshotting, incremental models, data marts</li>
+          </ul>
+          <div class="label">Deep Dive</div>
+          <ul>
+            <li>One fact row = one business event or one snapshot</li>
+            <li>Dimensions describe who / what / where / when</li>
+            <li>Degenerate and junk dimensions awareness</li>
+            <li>SCD Type 1 vs Type 2</li>
+            <li>Bridge tables, aggregate tables, partitioning large facts</li>
+            <li>Avoid wide unmodeled chaos in the serving layer</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>Source Systems</h2>
+        <div class="content">
+          <ul>
+            <li>OLTP databases</li>
+            <li>APIs</li>
+            <li>Files from vendors</li>
+            <li>Event streams</li>
+            <li>SaaS tools</li>
+            <li>Logs and clickstream</li>
+            <li>IoT / telemetry</li>
+            <li>CDC awareness</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>Ingestion</h2>
+        <div class="content">
+          <ul>
+            <li>Batch ingestion, streaming ingestion, micro-batch</li>
+            <li>Change data capture, full refresh, incremental extract</li>
+            <li>Schema registry awareness and catalog registration</li>
+          </ul>
+          <div class="label">Batch</div>
+          <ul>
+            <li>Scheduled pulls</li>
+            <li>File drops</li>
+            <li>Warehouse loads</li>
+          </ul>
+          <div class="label">Streaming</div>
+          <ul>
+            <li>Kafka topics, partitions, offsets, consumer groups</li>
+            <li>Insert / update / delete semantics</li>
+            <li>Deduplication strategy</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>Metadata & Quality</h2>
+        <div class="content">
+          <div class="label">Catalog</div>
+          <ul>
+            <li>Table names, schemas, owners, lineage</li>
+            <li>Classification / sensitivity</li>
+            <li>Freshness</li>
+            <li>Glue Catalog or Unity Catalog awareness</li>
+          </ul>
+          <div class="label">Data Quality</div>
+          <ul>
+            <li>Schema validation</li>
+            <li>Null, uniqueness, and referential-integrity checks</li>
+            <li>Accepted values and business-rule validation</li>
+            <li>Freshness tests and volume anomaly checks</li>
+            <li>Quarantine bad records</li>
+            <li>Checkpoint validation</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>Spark</h2>
+        <div class="content">
+          <ul>
+            <li>Spark SQL and DataFrames</li>
+            <li>Transformations vs actions</li>
+            <li>Lazy execution</li>
+            <li>Catalyst / Tungsten awareness</li>
+            <li>Partitions, shuffle, caching, broadcast joins</li>
+            <li>UDF caution</li>
+            <li>PySpark</li>
+          </ul>
+          <div class="label">Structured Streaming</div>
+          <ul>
+            <li>Sources, sinks, triggers</li>
+            <li>Watermarks</li>
+            <li>Stateful ops</li>
+            <li>Checkpointing</li>
+            <li>Late / out-of-order events</li>
+          </ul>
+          <div class="label">Common Performance Issues</div>
+          <ul>
+            <li>Small files</li>
+            <li>Skew</li>
+            <li>Too many shuffles</li>
+            <li>Bad partitioning</li>
+            <li>Wide transformations</li>
+            <li>Unbounded state</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>Databricks</h2>
+        <div class="content">
+          <ul>
+            <li>Workspace basics, notebooks, clusters / compute, jobs, repos</li>
+            <li>Delta Lake</li>
+            <li>Unity Catalog awareness</li>
+            <li>Databricks SQL</li>
+            <li>Lakehouse concepts</li>
+            <li>Data engineering + warehousing on one platform</li>
+            <li>Governance and sharing awareness</li>
+          </ul>
+          <div class="label">Medallion Architecture</div>
+          <ul>
+            <li><strong>Bronze:</strong> raw ingest, append, preserve fidelity</li>
+            <li><strong>Silver:</strong> clean, dedupe, standardize, conform</li>
+            <li><strong>Gold:</strong> business-ready marts and aggregates</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>Redshift</h2>
+        <div class="content">
+          <ul>
+            <li>Provisioned vs Serverless awareness</li>
+            <li>Leader / compute concepts</li>
+            <li>Columnar warehouse mindset</li>
+            <li>Loading data, COPY, and bulk-load patterns</li>
+            <li>Staging tables</li>
+            <li>Distribution styles and sort keys</li>
+            <li>Compression / encoding awareness</li>
+            <li>WLM / concurrency awareness</li>
+            <li>Spectrum awareness</li>
+            <li>Vacuum / analyze awareness</li>
+            <li>Security and access control</li>
+          </ul>
+          <div class="label">Tuning</div>
+          <ul>
+            <li>Filter early</li>
+            <li>Avoid unnecessary joins</li>
+            <li>Use subqueries when appropriate</li>
+            <li>Understand table-design impact</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box blue">
+        <h2>Orchestration</h2>
+        <div class="content">
+          <div class="label">Airflow</div>
+          <ul>
+            <li>DAGs, tasks, operators, dependencies</li>
+            <li>Scheduling, retries, backfills, SLA awareness</li>
+            <li>Sensors</li>
+            <li>Secrets / connections</li>
+            <li>Task idempotency</li>
+            <li>Parameterized jobs</li>
+            <li>Failure notifications</li>
+            <li>Run metadata</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box blue">
+        <h2>Transformation</h2>
+        <div class="content">
+          <div class="label">SQL-First</div>
+          <ul>
+            <li>Prefer repeatable transformations with lineage and tests</li>
+          </ul>
+          <div class="label">dbt</div>
+          <ul>
+            <li>Models, sources, seeds, snapshots</li>
+            <li>Tests and docs</li>
+            <li>Lineage graph</li>
+            <li>Macros / Jinja</li>
+            <li>Incremental models</li>
+            <li>Environments and CI/CD</li>
+            <li>Semantic-layer awareness</li>
+          </ul>
+          <div class="label">Core Tests</div>
+          <ul>
+            <li><code>unique</code>, <code>not_null</code>, <code>relationships</code>, <code>accepted_values</code></li>
+            <li>Custom business tests</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box red">
+        <h2>Streaming & Events</h2>
+        <div class="content">
+          <div class="label">Kafka</div>
+          <ul>
+            <li>Topics, partitions, brokers</li>
+            <li>Producers, consumers, consumer groups</li>
+            <li>Offsets, retention, replay</li>
+            <li>Keys and ordering</li>
+            <li>Dead-letter awareness</li>
+            <li>Schema / versioning awareness</li>
+          </ul>
+          <div class="label">Design Decisions</div>
+          <ul>
+            <li>Event-time vs processing-time</li>
+            <li>Deduplication strategy</li>
+            <li>Late-event handling</li>
+            <li>State-size control</li>
+            <li>Checkpoint location</li>
+            <li>Sink guarantees</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>AWS Data Lake Support</h2>
+        <div class="content">
+          <div class="label">Glue</div>
+          <ul>
+            <li>Crawlers</li>
+            <li>Data Catalog</li>
+            <li>ETL jobs</li>
+            <li>Connections</li>
+            <li>Triggers and scheduling</li>
+            <li>Monitoring</li>
+            <li>Schema inference</li>
+            <li>Partition metadata</li>
+            <li>Catalog-driven discovery</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box red">
+        <h2>Security & Governance</h2>
+        <div class="content">
+          <ul>
+            <li>Least privilege</li>
+            <li>PII classification</li>
+            <li>Encryption at rest and in transit</li>
+            <li>Row / column access awareness</li>
+            <li>Audit logs</li>
+            <li>Catalog ownership</li>
+            <li>Data retention policies</li>
+            <li>Access reviews</li>
+            <li>Compliance awareness</li>
+            <li>Lineage and discoverability</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box red">
+        <h2>Reliability</h2>
+        <div class="content">
+          <ul>
+            <li>Idempotent loads</li>
+            <li>Backfill strategy</li>
+            <li>Replay strategy</li>
+            <li>Late-arriving data handling</li>
+            <li>Schema evolution plan</li>
+            <li>Poison-pill / bad-record handling</li>
+            <li>Retry vs fail-fast rules</li>
+            <li>Data contracts awareness</li>
+            <li>Versioned datasets</li>
+            <li>Runbooks</li>
+            <li>Disaster-recovery awareness</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>Cost & Performance</h2>
+        <div class="content">
+          <ul>
+            <li>Choose the right storage format</li>
+            <li>Partition wisely</li>
+            <li>Avoid small files</li>
+            <li>Prune columns</li>
+            <li>Push filters down</li>
+            <li>Cache only when useful</li>
+            <li>Use warehouse sizing intentionally</li>
+            <li>Separate dev / test / prod</li>
+            <li>Watch long-running queries</li>
+            <li>Measure before tuning</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>How to Choose Tools</h2>
+        <div class="content">
+          <ul>
+            <li>Need simple BI warehouse? <strong>Redshift</strong> is often relevant.</li>
+            <li>Need lakehouse + big data + ML adjacency? <strong>Databricks</strong> is often relevant.</li>
+            <li>Need large-scale distributed processing? <strong>Spark</strong> is relevant.</li>
+            <li>Need SQL transformations with lineage and tests? <strong>dbt</strong> is relevant.</li>
+            <li>Need workflow scheduling? <strong>Airflow</strong> is relevant.</li>
+            <li>Need event streams? <strong>Kafka</strong> is relevant.</li>
+            <li>Need metadata / catalog in AWS? <strong>Glue</strong> is relevant.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>Learning Order</h2>
+        <div class="content">
+          <ol class="tiny">
+            <li>SQL hard</li>
+            <li>Python + CLI + Git</li>
+            <li>Warehouse concepts</li>
+            <li>Data modeling</li>
+            <li>Spark basics</li>
+            <li>Databricks basics</li>
+            <li>Redshift loading / tuning basics</li>
+            <li>dbt</li>
+            <li>Airflow</li>
+            <li>Kafka + streaming</li>
+            <li>Quality / governance</li>
+            <li>Portfolio + interview prep</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Portfolio</h2>
+        <h3>Build 3 Projects</h3>
+        <div class="content">
+          <div class="label">Project 1 — Batch ELT</div>
+          <ul>
+            <li>Source: CSV, API, or Postgres</li>
+            <li>Land raw data</li>
+            <li>Clean and standardize</li>
+            <li>Load warehouse</li>
+            <li>Build star schema</li>
+            <li>dbt tests + docs</li>
+            <li>Airflow schedule</li>
+            <li>Dashboard or SQL analysis</li>
+          </ul>
+          <div class="label">Project 2 — Streaming</div>
+          <ul>
+            <li>Kafka topic</li>
+            <li>Spark Structured Streaming consumer</li>
+            <li>Dedup + watermark</li>
+            <li>Write Bronze / Silver</li>
+            <li>Serve Gold aggregates</li>
+            <li>Alerting + checkpointing</li>
+          </ul>
+          <div class="label">Project 3 — Warehouse Optimization</div>
+          <ul>
+            <li>Redshift schema</li>
+            <li>Distribution / sort experiments</li>
+            <li>Loading benchmarks</li>
+            <li>Query tuning examples</li>
+            <li>Cost / performance writeup</li>
+            <li>Data quality failures + recovery</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box blue">
+        <h2>Interview Prep</h2>
+        <div class="content">
+          <ul>
+            <li>Explain medallion architecture in plain English</li>
+            <li>Explain fact vs dimension</li>
+            <li>Explain partitioning and skew</li>
+            <li>Explain idempotency</li>
+            <li>Explain batch vs streaming</li>
+            <li>Explain why Parquet over CSV</li>
+            <li>Explain why the warehouse layer exists</li>
+            <li>Explain dbt lineage and tests</li>
+            <li>Explain Airflow retries and backfills</li>
+            <li>Explain Redshift distribution and sort keys at a basic level</li>
+            <li>Talk through one pipeline end to end</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>Job Readiness</h2>
+        <div class="content">
+          <ul>
+            <li>Can explain medallion / lakehouse vs warehouse</li>
+            <li>Can write joins, windows, CTEs, and incremental logic</li>
+            <li>Can design fact and dimension tables</li>
+            <li>Can explain Spark partitions and skew at a basic level</li>
+            <li>Can load and query Redshift</li>
+            <li>Can use Databricks notebooks / jobs / catalog at a basic level</li>
+            <li>Can explain orchestration, retries, idempotency, and SLAs</li>
+            <li>Can talk about schema evolution, data quality, and lineage</li>
+          </ul>
+          <p><strong>Outcome:</strong> you are job-ready enough for junior data engineering interviews, then deepen based on stack: AWS/Redshift, Databricks/Spark, Streaming/Kafka, or analytics engineering/dbt.</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">Designed as a printable, browser-friendly reference sheet. Edit the HTML directly for layout control.</div>
+  </div>
+</body>
+</html>

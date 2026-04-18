@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Engineer Snippets</title>
+  <style>
+    :root {
+      --paper: #fdfcf7;
+      --ink: #1f2933;
+      --muted: #52606d;
+      --border: #b8c1cc;
+      --title-bg: #173f35;
+      --title-fg: #f6fff9;
+      --green: #dff1df;
+      --green-border: #5a8f62;
+      --blue: #dcebf9;
+      --blue-border: #4f79a7;
+      --orange: #fde7c7;
+      --orange-border: #bf7b1d;
+      --red: #f6dfdf;
+      --red-border: #a65454;
+      --yellow: #f7f3cf;
+      --yellow-border: #a7963b;
+      --purple: #e9e0f6;
+      --purple-border: #775da8;
+      --code-bg: #15202b;
+      --code-fg: #edf2f7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #e7eaee;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.2;
+    }
+
+    .page {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .banner {
+      background: var(--title-bg);
+      color: var(--title-fg);
+      border: 4px solid #2e6455;
+      padding: 10px 14px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--muted);
+      font-size: 13px;
+      margin: -2px 0 12px;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 0 0 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: #173f35;
+      background: #eef4ef;
+      border: 2px solid #7d9c8f;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .nav a.active {
+      background: #173f35;
+      color: #f6fff9;
+      border-color: #173f35;
+    }
+
+    .sheet {
+      column-count: 3;
+      column-gap: 12px;
+    }
+
+    .box {
+      break-inside: avoid;
+      margin: 0 0 12px;
+      border: 4px solid var(--border);
+      background: white;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .box.blue { border-color: var(--blue-border); background: var(--blue); }
+    .box.green { border-color: var(--green-border); background: var(--green); }
+    .box.orange { border-color: var(--orange-border); background: var(--orange); }
+    .box.red { border-color: var(--red-border); background: var(--red); }
+    .box.yellow { border-color: var(--yellow-border); background: var(--yellow); }
+    .box.purple { border-color: var(--purple-border); background: var(--purple); }
+
+    .box h2 {
+      margin: 0;
+      padding: 8px 10px 6px;
+      border-bottom: 3px solid rgba(0, 0, 0, 0.15);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 24px;
+      line-height: 1.05;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      text-align: center;
+    }
+
+    .box .content {
+      padding: 10px 12px 12px;
+      font-size: 13px;
+    }
+
+    .label {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-size: 11px;
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0 0 6px;
+    }
+
+    pre {
+      margin: 0 0 8px;
+      padding: 12px;
+      background: var(--code-bg);
+      color: var(--code-fg);
+      border-radius: 8px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.35;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    ul {
+      margin: 0 0 6px 16px;
+      padding: 0;
+    }
+
+    li {
+      margin: 0 0 3px;
+    }
+
+    .footer {
+      margin-top: 6px;
+      text-align: center;
+      color: var(--muted);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1200px) { .sheet { column-count: 2; } }
+    @media (max-width: 700px) { .sheet { column-count: 1; } }
+
+    @media print {
+      @page {
+        size: 11in 17in portrait;
+        margin: 0.32in;
+      }
+
+      body { background: white; }
+      .page { max-width: none; padding: 0; }
+      .sheet { column-count: 3; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="banner">Data Engineer Snippets</div>
+    <div class="subtitle">Copyable patterns for SQL, dbt, orchestration, Spark, and validation</div>
+    <nav class="nav">
+      <a href="data_engineer_cheatsheet.html">Overview</a>
+      <a href="data_engineer_playbooks.html">Playbooks</a>
+      <a class="active" href="data_engineer_snippets.html">Snippets</a>
+    </nav>
+
+    <div class="sheet">
+      <section class="box blue">
+        <h2>SQL Dedupe</h2>
+        <div class="content">
+          <pre><code>with ranked as (
+  select
+    t.*,
+    row_number() over (
+      partition by business_key
+      order by updated_at desc
+    ) as rn
+  from raw_table t
+)
+select *
+from ranked
+where rn = 1;</code></pre>
+          <ul>
+            <li>Use when latest record wins.</li>
+            <li>Make tie-breakers explicit.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box blue">
+        <h2>Top N Per Group</h2>
+        <div class="content">
+          <pre><code>with ranked as (
+  select
+    category,
+    item_id,
+    metric,
+    row_number() over (
+      partition by category
+      order by metric desc
+    ) as rn
+  from scores
+)
+select *
+from ranked
+where rn &lt;= 3;</code></pre>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Incremental Extract</h2>
+        <div class="content">
+          <pre><code>select *
+from source_table
+where updated_at &gt;= :last_watermark
+  and updated_at &lt; :next_cutoff;</code></pre>
+          <ul>
+            <li>Use closed-open windows.</li>
+            <li>Persist watermark only after full success.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Merge / Upsert Skeleton</h2>
+        <div class="content">
+          <pre><code>merge into target t
+using staging s
+  on t.id = s.id
+when matched then update set
+  value = s.value,
+  updated_at = s.updated_at
+when not matched then insert (
+  id, value, updated_at
+) values (
+  s.id, s.value, s.updated_at
+);</code></pre>
+          <ul>
+            <li>Keep staging deterministic.</li>
+            <li>Deduplicate source first.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box red">
+        <h2>Freshness Check</h2>
+        <div class="content">
+          <pre><code>select
+  max(event_time) as latest_event_time,
+  current_timestamp - max(event_time) as lag
+from fact_events;</code></pre>
+          <ul>
+            <li>Compare lag to SLA threshold.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box red">
+        <h2>Volume Anomaly Check</h2>
+        <div class="content">
+          <pre><code>with daily as (
+  select
+    load_date,
+    count(*) as row_count
+  from fact_events
+  group by 1
+)
+select *
+from daily
+where load_date &gt;= current_date - 7
+order by load_date desc;</code></pre>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>dbt Model Skeleton</h2>
+        <div class="content">
+          <pre><code>{{ config(materialized='incremental') }}
+
+with source as (
+  select * from {{ source('app', 'events') }}
+  {% if is_incremental() %}
+  where updated_at &gt; (
+    select max(updated_at) from {{ this }}
+  )
+  {% endif %}
+),
+cleaned as (
+  select
+    user_id,
+    event_name,
+    updated_at
+  from source
+)
+select * from cleaned;</code></pre>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>dbt Tests YAML</h2>
+        <div class="content">
+          <pre><code>models:
+  - name: fct_orders
+    columns:
+      - name: order_id
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        tests:
+          - relationships:
+              to: ref('dim_customers')
+              field: customer_id</code></pre>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>Airflow DAG Skeleton</h2>
+        <div class="content">
+          <pre><code>from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime
+
+with DAG(
+    dag_id="daily_pipeline",
+    start_date=datetime(2026, 1, 1),
+    schedule="@daily",
+    catchup=False,
+) as dag:
+    extract = PythonOperator(
+        task_id="extract",
+        python_callable=run_extract,
+    )
+
+    transform = PythonOperator(
+        task_id="transform",
+        python_callable=run_transform,
+    )
+
+    load = PythonOperator(
+        task_id="load",
+        python_callable=run_load,
+    )
+
+    extract >> transform >> load</code></pre>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>PySpark Batch Skeleton</h2>
+        <div class="content">
+          <pre><code>df = spark.read.parquet(input_path)
+
+result = (
+    df.filter("event_time is not null")
+      .dropDuplicates(["id"])
+      .groupBy("event_date", "category")
+      .count()
+)
+
+result.write.mode("overwrite").parquet(output_path)</code></pre>
+          <ul>
+            <li>Prefer built-ins over UDFs first.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>Structured Streaming</h2>
+        <div class="content">
+          <pre><code>stream_df = (
+    spark.readStream
+         .format("kafka")
+         .option("subscribe", "events")
+         .load()
+)
+
+query = (
+    stream_df.writeStream
+             .format("delta")
+             .option("checkpointLocation", checkpoint_path)
+             .start(output_path)
+)</code></pre>
+          <ul>
+            <li>Checkpoint location is part of the contract.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>Idempotent Load Reminder</h2>
+        <div class="content">
+          <pre><code>load_key = (source_id, business_date)
+write rule = overwrite same key or merge deterministically
+watermark advance = only after full success</code></pre>
+          <ul>
+            <li>Retrying the same run should not create new duplicates.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>Partitioning Reminders</h2>
+        <div class="content">
+          <ul>
+            <li>Partition by fields used in common filtering.</li>
+            <li>Avoid over-partitioning tiny datasets.</li>
+            <li>Too many small files will hurt performance.</li>
+            <li>Partition design is part of cost design.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box red">
+        <h2>Bad Record Quarantine</h2>
+        <div class="content">
+          <pre><code>if record fails validation:
+    write to quarantine_table
+    include failure_reason
+    include ingestion_timestamp
+    do not silently drop</code></pre>
+        </div>
+      </section>
+
+      <section class="box red">
+        <h2>Root Cause Query Pattern</h2>
+        <div class="content">
+          <pre><code>select
+  load_date,
+  status,
+  count(*) as rows
+from staging_table
+where load_date &gt;= current_date - 3
+group by 1, 2
+order by 1 desc, 2;</code></pre>
+          <ul>
+            <li>Break failures down by date, status, source, or partition first.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Documentation Template</h2>
+        <div class="content">
+          <pre><code>Table:
+Owner:
+Grain:
+Primary key:
+Refresh cadence:
+Upstream sources:
+Downstream consumers:
+SLA:
+Quality checks:
+Known caveats:</code></pre>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">These are starter patterns. Adapt them to the platform and failure modes you actually operate.</div>
+  </div>
+</body>
+</html>

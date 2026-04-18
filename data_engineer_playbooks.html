@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Engineer Playbooks</title>
+  <style>
+    :root {
+      --paper: #fdfcf7;
+      --ink: #1f2933;
+      --muted: #52606d;
+      --border: #b8c1cc;
+      --title-bg: #173f35;
+      --title-fg: #f6fff9;
+      --green: #dff1df;
+      --green-border: #5a8f62;
+      --blue: #dcebf9;
+      --blue-border: #4f79a7;
+      --orange: #fde7c7;
+      --orange-border: #bf7b1d;
+      --red: #f6dfdf;
+      --red-border: #a65454;
+      --yellow: #f7f3cf;
+      --yellow-border: #a7963b;
+      --purple: #e9e0f6;
+      --purple-border: #775da8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #e7eaee;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.2;
+    }
+
+    .page {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .banner {
+      background: var(--title-bg);
+      color: var(--title-fg);
+      border: 4px solid #2e6455;
+      padding: 10px 14px;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--muted);
+      font-size: 13px;
+      margin: -2px 0 12px;
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin: 0 0 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: #173f35;
+      background: #eef4ef;
+      border: 2px solid #7d9c8f;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .nav a.active {
+      background: #173f35;
+      color: #f6fff9;
+      border-color: #173f35;
+    }
+
+    .sheet {
+      column-count: 3;
+      column-gap: 12px;
+    }
+
+    .box {
+      break-inside: avoid;
+      margin: 0 0 12px;
+      border: 4px solid var(--border);
+      background: white;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .box.blue { border-color: var(--blue-border); background: var(--blue); }
+    .box.green { border-color: var(--green-border); background: var(--green); }
+    .box.orange { border-color: var(--orange-border); background: var(--orange); }
+    .box.red { border-color: var(--red-border); background: var(--red); }
+    .box.yellow { border-color: var(--yellow-border); background: var(--yellow); }
+    .box.purple { border-color: var(--purple-border); background: var(--purple); }
+
+    .box h2 {
+      margin: 0;
+      padding: 8px 10px 6px;
+      border-bottom: 3px solid rgba(0, 0, 0, 0.15);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 27px;
+      line-height: 1.05;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      text-align: center;
+    }
+
+    .box h3 {
+      margin: 0;
+      padding: 8px 10px 4px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 15px;
+      line-height: 1.1;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .box .content {
+      padding: 8px 12px 12px;
+      font-size: 13px;
+    }
+
+    .content ul,
+    .content ol {
+      margin: 0 0 8px 16px;
+      padding: 0;
+    }
+
+    .content li {
+      margin: 0 0 3px;
+    }
+
+    .label {
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      font-size: 11px;
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 6px 0 4px;
+    }
+
+    .footer {
+      margin-top: 6px;
+      text-align: center;
+      color: var(--muted);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 12px;
+    }
+
+    @media (max-width: 1200px) { .sheet { column-count: 2; } }
+    @media (max-width: 700px) { .sheet { column-count: 1; } }
+
+    @media print {
+      @page {
+        size: 11in 17in portrait;
+        margin: 0.32in;
+      }
+
+      body { background: white; }
+      .page { max-width: none; padding: 0; }
+      .sheet { column-count: 3; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="banner">Data Engineer Playbooks</div>
+    <div class="subtitle">Repeatable operating patterns for common day-to-day engineering tasks</div>
+    <nav class="nav">
+      <a href="data_engineer_cheatsheet.html">Overview</a>
+      <a class="active" href="data_engineer_playbooks.html">Playbooks</a>
+      <a href="data_engineer_snippets.html">Snippets</a>
+    </nav>
+
+    <div class="sheet">
+      <section class="box green">
+        <h2>New Source Onboarding</h2>
+        <div class="content">
+          <div class="label">Goal</div>
+          <ul>
+            <li>Bring a source system into the platform with clear ownership, schema, and validation.</li>
+          </ul>
+          <div class="label">Gather</div>
+          <ul>
+            <li>Owner and escalation path</li>
+            <li>Business purpose and consumers</li>
+            <li>Grain, schema, update frequency, SLA</li>
+            <li>Access method: API, DB, files, CDC, events</li>
+            <li>Sensitive fields and retention requirements</li>
+          </ul>
+          <div class="label">Steps</div>
+          <ol>
+            <li>Document source contract and sample records.</li>
+            <li>Choose full-refresh, incremental, CDC, or streaming pattern.</li>
+            <li>Land raw data with minimal transformation.</li>
+            <li>Register metadata and ownership.</li>
+            <li>Add schema and freshness checks.</li>
+            <li>Build cleaned / canonical layer.</li>
+          </ol>
+          <div class="label">Done When</div>
+          <ul>
+            <li>Source has owner, tests, docs, lineage, and a recovery plan.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box blue">
+        <h2>Incremental Pipeline</h2>
+        <div class="content">
+          <div class="label">Choose</div>
+          <ul>
+            <li>Primary key or business key</li>
+            <li>Watermark column or change version</li>
+            <li>Append-only vs merge / upsert</li>
+            <li>Late-data policy</li>
+          </ul>
+          <div class="label">Steps</div>
+          <ol>
+            <li>Load only new or changed rows from source.</li>
+            <li>Stage raw extract separately.</li>
+            <li>Validate record counts and duplicate risk.</li>
+            <li>Apply deterministic transforms.</li>
+            <li>Merge or append into target table.</li>
+            <li>Persist watermark only after success.</li>
+          </ol>
+          <div class="label">Watch For</div>
+          <ul>
+            <li>Clock drift, null watermarks, duplicate keys, replays, partial writes.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>Safe Backfill</h2>
+        <div class="content">
+          <div class="label">Before</div>
+          <ul>
+            <li>Define exact time window and impacted tables.</li>
+            <li>Estimate compute, runtime, and blast radius.</li>
+            <li>Decide whether to isolate into temp tables.</li>
+            <li>Pause or coordinate downstream jobs if needed.</li>
+          </ul>
+          <div class="label">During</div>
+          <ul>
+            <li>Process in bounded chunks.</li>
+            <li>Track progress by partition or date window.</li>
+            <li>Validate each chunk before marking complete.</li>
+          </ul>
+          <div class="label">After</div>
+          <ul>
+            <li>Reconcile counts, freshness, and business metrics.</li>
+            <li>Document what was reprocessed and why.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box red">
+        <h2>Pipeline Failure Triage</h2>
+        <div class="content">
+          <div class="label">First Questions</div>
+          <ul>
+            <li>Did extract fail, transform fail, or load fail?</li>
+            <li>Is this schema drift, bad data, permissions, compute, or dependency failure?</li>
+            <li>Is this a one-off or a systemic issue?</li>
+          </ul>
+          <div class="label">Triage Order</div>
+          <ol>
+            <li>Read the failing step and timestamp.</li>
+            <li>Check upstream freshness and schema changes.</li>
+            <li>Check recent deploys and config changes.</li>
+            <li>Inspect row counts and anomaly spikes.</li>
+            <li>Decide: retry, patch forward, quarantine, or rollback.</li>
+          </ol>
+          <div class="label">Preventive Actions</div>
+          <ul>
+            <li>Add test, alert, guardrail, or runbook update.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box red">
+        <h2>Bad Data Investigation</h2>
+        <div class="content">
+          <div class="label">Check</div>
+          <ul>
+            <li>Freshness</li>
+            <li>Row counts vs normal baseline</li>
+            <li>Duplicate-key spikes</li>
+            <li>Null-rate spikes</li>
+            <li>Unexpected accepted values</li>
+            <li>Changed field semantics from source team</li>
+          </ul>
+          <div class="label">Compare</div>
+          <ul>
+            <li>Today vs yesterday</li>
+            <li>Raw vs cleaned layer</li>
+            <li>Source totals vs warehouse totals</li>
+            <li>One partition vs neighboring partitions</li>
+          </ul>
+          <div class="label">Outcome</div>
+          <ul>
+            <li>Fix transform, fix contract, quarantine data, or backfill corrected history.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>Slow Query Tuning</h2>
+        <div class="content">
+          <div class="label">Quick Wins</div>
+          <ul>
+            <li>Filter early</li>
+            <li>Select fewer columns</li>
+            <li>Reduce large joins</li>
+            <li>Use staging / temp tables for complex steps</li>
+          </ul>
+          <div class="label">Warehouse Checks</div>
+          <ul>
+            <li>Partition pruning working?</li>
+            <li>Sort / dist design helping or hurting?</li>
+            <li>Small files or skew causing scan bloat?</li>
+            <li>Broadcast / shuffle decisions sensible?</li>
+          </ul>
+          <div class="label">Done When</div>
+          <ul>
+            <li>You measured before and after, and can explain why it improved.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box yellow">
+        <h2>Schema Change Handling</h2>
+        <div class="content">
+          <div class="label">Classify</div>
+          <ul>
+            <li>Additive</li>
+            <li>Breaking rename</li>
+            <li>Type change</li>
+            <li>Semantic change with same name</li>
+          </ul>
+          <div class="label">Steps</div>
+          <ol>
+            <li>Identify downstream consumers.</li>
+            <li>Decide compatibility strategy.</li>
+            <li>Update transforms and tests.</li>
+            <li>Version docs or contracts if needed.</li>
+            <li>Backfill if semantics changed historically.</li>
+          </ol>
+          <div class="label">Rule</div>
+          <ul>
+            <li>Semantic changes are more dangerous than column additions.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>Ship a New dbt Model</h2>
+        <div class="content">
+          <ol>
+            <li>Define business grain.</li>
+            <li>Write model SQL from trusted sources only.</li>
+            <li>Add tests: <code>unique</code>, <code>not_null</code>, relationships, accepted values.</li>
+            <li>Add documentation and ownership.</li>
+            <li>Check lineage impact.</li>
+            <li>Run locally or in CI.</li>
+            <li>Validate row counts and sample records.</li>
+            <li>Promote through environment flow.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="box purple">
+        <h2>Spark Skew Debugging</h2>
+        <div class="content">
+          <div class="label">Symptoms</div>
+          <ul>
+            <li>One stage hangs forever</li>
+            <li>One task massively slower than others</li>
+            <li>Out-of-memory on one executor</li>
+          </ul>
+          <div class="label">Checks</div>
+          <ul>
+            <li>Hot keys</li>
+            <li>Join type and data distribution</li>
+            <li>Partition count too low or too high</li>
+            <li>Explosive wide transformation</li>
+          </ul>
+          <div class="label">Fixes</div>
+          <ul>
+            <li>Salting hot keys</li>
+            <li>Broadcast smaller side</li>
+            <li>Repartition intentionally</li>
+            <li>Pre-aggregate before join</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box green">
+        <h2>Production Release Checklist</h2>
+        <div class="content">
+          <ul>
+            <li>Schema docs updated</li>
+            <li>Ownership clear</li>
+            <li>Alerts configured</li>
+            <li>Data quality tests green</li>
+            <li>Rollback or recovery plan known</li>
+            <li>Cost impact understood</li>
+            <li>Downstream consumers notified if needed</li>
+            <li>Runbook updated</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box blue">
+        <h2>Daily Data Quality Checklist</h2>
+        <div class="content">
+          <ul>
+            <li>Freshness within SLA</li>
+            <li>Expected partitions arrived</li>
+            <li>No duplicate business keys</li>
+            <li>Null rates within normal range</li>
+            <li>Volume within tolerance band</li>
+            <li>Business-rule checks passing</li>
+            <li>No silent schema drift</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box orange">
+        <h2>Incident Response</h2>
+        <div class="content">
+          <div class="label">Stabilize</div>
+          <ul>
+            <li>Identify severity and affected data products.</li>
+            <li>Stop further damage if pipeline is corrupting data.</li>
+          </ul>
+          <div class="label">Communicate</div>
+          <ul>
+            <li>Tell stakeholders what is known, unknown, and next update time.</li>
+          </ul>
+          <div class="label">Recover</div>
+          <ul>
+            <li>Restore good state, replay safely, validate metrics, then reopen downstream access.</li>
+          </ul>
+          <div class="label">Afterward</div>
+          <ul>
+            <li>Write RCA, add guardrails, and improve runbook.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="box red">
+        <h2>Reduce Cost</h2>
+        <div class="content">
+          <ul>
+            <li>Stop reading columns you do not need.</li>
+            <li>Fix partition pruning.</li>
+            <li>Compact small files.</li>
+            <li>Lower unnecessary refresh cadence.</li>
+            <li>Cache less, not more.</li>
+            <li>Separate exploratory from scheduled workloads.</li>
+            <li>Delete stale dev artifacts.</li>
+            <li>Measure query and cluster patterns before resizing.</li>
+          </ul>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">Use these as operating runbooks: concise enough to scan, concrete enough to follow.</div>
+  </div>
+</body>
+</html>
